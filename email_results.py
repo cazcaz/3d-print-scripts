@@ -24,7 +24,6 @@ class PrintDetails:
                     parts = line.strip().split(",")
                     for part in parts:
                         key_val = part.strip().split("=")
-                        print(part)
                         result_dict[key_val[0]] = key_val[1]
         except:
             print(f"Could not open results file at {self._path}")
@@ -68,12 +67,13 @@ def send_result_email(result: PrintDetails, envs: Envs):
     recipient_email = envs.result_recipient_email
 
     msg = EmailMessage()
-    msg["Subject"] = f"3D Print {result.print_name} Completed"
+    msg["Subject"] = f"3D Print \"{result.print_name}\" Completed"
     msg["From"] = email
     msg["To"] = recipient_email
     msg.set_content(
         f"Status: {result.print_status}\n"
-        f"Total print time: {format_seconds(result.print_time)}"
+        f"Total print time: {format_seconds(result.print_time)}\n"
+        "Printer turn off sequence started"
     )
     with smtplib.SMTP("smtp.gmail.com", 587) as smtp:
         smtp.starttls()
