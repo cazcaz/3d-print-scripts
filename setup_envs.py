@@ -29,24 +29,31 @@ class Envs:
         self.env_dict["result_recipient_email"] = os.getenv("result_recipient_email")
         self.env_dict["print_result_path"] = os.getenv("print_result_path")
     
+    @property
     def tapo_username(self):
         return self.env_dict["tapo_username"]
     
+    @property
     def tapo_password(self):
         return self.env_dict["tapo_password"]
     
+    @property
     def tapo_plug_ip(self):
         return self.env_dict["tapo_plug_ip"]
     
+    @property
     def result_gmail(self):
         return self.env_dict["result_gmail"]
     
+    @property
     def result_gmail_app_password(self):
         return self.env_dict["result_gmail_app_password"]
     
+    @property
     def result_recipient_email(self):
         return self.env_dict["result_recipient_email"]
     
+    @property
     def print_result_path(self):
         return self.env_dict["print_result_path"]
 
