@@ -5,6 +5,7 @@
 # ///
 
 import smtplib
+import os
 
 from setup_envs import Envs, get_envs
 from email.message import EmailMessage
@@ -12,20 +13,35 @@ from email.message import EmailMessage
 class PrintDetails:
     def __init__(self, result_path: str):
         self._path = result_path
+        self.is_valid = False
         self.parse_result()
     
     def parse_result(self):
         result_dict = {}
-        with open(self._path, "r") as f:
-            for line in f:
-                parts = line.strip().split(",")
-                for part in parts:
-                    key_val = part.strip().split("=")
-                    print(part)
-                    result_dict[key_val[0]] = key_val[1]
-        self._print_status = result_dict["STATUS"]
-        self._print_time = result_dict["TIME"]
-        self._print_name = result_dict["NAME"]
+        try:
+            with open(self._path, "r") as f:
+                for line in f:
+                    parts = line.strip().split(",")
+                    for part in parts:
+                        key_val = part.strip().split("=")
+                        print(part)
+                        result_dict[key_val[0]] = key_val[1]
+        except:
+            print(f"Could not open results file at {self._path}")
+            return
+        
+        try:
+            self._print_status = result_dict["STATUS"]
+            self._print_time = result_dict["TIME"]
+            self._print_name = result_dict["NAME"]
+            self.is_valid = True
+        except:
+            print("Could not parse results")
+
+        try:
+            os.remove(self._path)
+        except:
+            print("Could not remove old results path")
     
     @property
     def print_status(self) -> str:
@@ -66,8 +82,7 @@ def send_result_email(result: PrintDetails, envs: Envs):
 
 def email_results(envs: Envs):
     results = PrintDetails(envs.print_result_path)
-    print(results)
-    if results == None:
+    if not results.is_valid:
         return
     send_result_email(results, envs)
 
