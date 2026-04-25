@@ -16,6 +16,15 @@ from plugp100.common.credentials import AuthCredential
 from plugp100.discovery.tapo_discovery import TapoDiscovery
 from plugp100.new.device_factory import connect, DeviceConnectConfiguration, TapoPlug
 from plugp100.new.components.countdown import Countdown as PlugCountdown
+from plugp100.new.errors.invalid_authentication import InvalidAuthentication as ia
+
+# Patch the broken __init__ of InvalidAuthentication to allow it to be raised without arguments
+def fixed_init(self, host: str, device_type: str):
+    super(ia, self).__init__(
+        f"Invalid authentication error for {host}, {device_type}"
+    )
+
+ia.__init__ = fixed_init
 
 class PrintDetails:
     def __init__(self, result_path: str):
