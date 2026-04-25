@@ -11,15 +11,40 @@ from email.message import EmailMessage
 
 class PrintDetails:
     def __init__(self, result_path: str):
-        self.path = result_path
+        self._path = result_path
+        self.parse_result()
     
     def parse_result(self):
-        print("not implemented")
+        result_dict = {}
+        with open(self._path, "r") as f:
+            for line in f:
+                parts = line.strip().split(",")
+                for part in parts:
+                    key_val = part.strip().split("=")
+                    print(part)
+                    result_dict[key_val[0]] = key_val[1]
+        self._print_status = result_dict["STATUS"]
+        self._print_time = result_dict["TIME"]
+        self._print_name = result_dict["NAME"]
+    
+    @property
+    def print_status(self) -> str:
+        return self._print_status
+    
+    @property
+    def print_time(self) -> str:
+        return self._print_time
+    
+    @property
+    def print_name(self) -> str:
+        return self._print_name
 
-def fetch_print_results(envs: Envs) -> PrintDetails:
-    result_path = envs.print_result_path
-    print("not implemented")
-    return None
+def format_seconds(value: str | int) -> str:
+    total = int(value)
+    hours, rem = divmod(total, 3600)
+    minutes, seconds = divmod(rem, 60)
+    return f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+
 
 def send_result_email(result: PrintDetails, envs: Envs):
     email = envs.result_gmail
@@ -27,20 +52,24 @@ def send_result_email(result: PrintDetails, envs: Envs):
     recipient_email = envs.result_recipient_email
 
     msg = EmailMessage()
-    msg["Subject"] = "Hello from Python"
+    msg["Subject"] = f"3D Print {result.print_name} Completed"
     msg["From"] = email
     msg["To"] = recipient_email
-    msg.set_content("This is a test email sent from my Python script.")
+    msg.set_content(
+        f"Status: {result.print_status}\n"
+        f"Total print time: {format_seconds(result.print_time)}"
+    )
     with smtplib.SMTP("smtp.gmail.com", 587) as smtp:
         smtp.starttls()
         smtp.login(email, email_password)
         smtp.send_message(msg)
 
 def email_results(envs: Envs):
-    results = fetch_print_results(envs)
+    results = PrintDetails(envs.print_result_path)
+    print(results)
     if results == None:
         return
-    send_result_email(envs)
+    send_result_email(results, envs)
 
 if __name__ == "__main__":
     envs = get_envs()
