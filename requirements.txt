@@ -7,3 +7,4 @@ psutil==7.0.0
 userpath==1.9.2
 wheel==0.46.1
 plugp100==5.1.7
+dotenv==0.9.9
