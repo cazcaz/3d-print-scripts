@@ -11,7 +11,11 @@ from setup_envs import Envs, get_envs
 
 from plugp100.common.credentials import AuthCredential
 from plugp100.discovery.tapo_discovery import DiscoveredDevice, TapoDiscovery
-from plugp100.new.device_factory import TapoPlug
+from plugp100.new.device_factory import (
+    DeviceConnectConfiguration,
+    TapoPlug,
+    connect,
+)
 from plugp100.new.components.countdown import Countdown as PlugCountdown
 from plugp100.new.errors.invalid_authentication import InvalidAuthentication as ia
 
@@ -44,10 +48,31 @@ async def discover_plug() -> DiscoveredDevice:
 
 async def connect_to_plug(credentials: AuthCredential) -> TapoPlug:
     discovered = await discover_plug()
-    device = await discovered.get_tapo_device(credentials)
+    device = await connect_discovered_plug(discovered, credentials)
     if not isinstance(device, TapoPlug):
         raise RuntimeError(f"Discovered device at {discovered.ip} is not a Tapo plug.")
     await device.update()
+    return device
+
+async def connect_discovered_plug(
+    discovered: DiscoveredDevice, credentials: AuthCredential
+) -> TapoPlug:
+    try:
+        device = await discovered.get_tapo_device(credentials)
+    except Exception as error:
+        if str(error) != "Failed to determine the right tapo protocol":
+            raise
+        schema = discovered.mgt_encrypt_schm
+        port = schema.http_port if schema and schema.http_port else 80
+        configuration = DeviceConnectConfiguration(
+            host=discovered.ip,
+            port=port,
+            credentials=credentials,
+            device_type=discovered.device_type,
+        )
+        device = await connect(configuration)
+    if not isinstance(device, TapoPlug):
+        raise RuntimeError(f"Discovered device at {discovered.ip} is not a Tapo plug.")
     return device
 
 async def send_shutoff_countdown(plug: TapoPlug):

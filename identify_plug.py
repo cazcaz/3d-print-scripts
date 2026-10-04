@@ -10,11 +10,11 @@ import asyncio
 from setup_envs import get_envs
 from plug_shutoff import (
     PLUG_SHUTOFF_COUNTDOWN,
+    connect_discovered_plug,
     discover_plugs,
     send_shutoff_countdown,
 )
 from plugp100.common.credentials import AuthCredential
-from plugp100.new.device_factory import TapoPlug
 
 
 async def identify_plug():
@@ -47,11 +47,7 @@ async def identify_plug():
         return
 
     credentials = AuthCredential(envs.tapo_username, envs.tapo_password)
-    device = await selected_plug.get_tapo_device(credentials)
-    if not isinstance(device, TapoPlug):
-        print("Selected device is not a Tapo plug; no countdown was scheduled.")
-        return
-
+    device = await connect_discovered_plug(selected_plug, credentials)
     await device.update()
     await send_shutoff_countdown(device)
     print(
