@@ -11,7 +11,6 @@ from dotenv import load_dotenv
 REQUIRED_VARS = dict([
     ("tapo_username", "Tapo accout username. This is the email address you use to log in to the Tapo app."),
     ("tapo_password", "Tapo account password. If this contains special characters, it is reccomended to change it to just be letters and numbers"),
-    ("tapo_plug_ip", "IP address of the Tapo plug that controls the printer"),
     ("result_gmail", "Gmail address to send results from"),
     ("result_gmail_app_password", "App password for the Gmail account"),
     ("result_recipient_email", "Email address to receive results"),
@@ -23,7 +22,6 @@ class Envs:
         self.env_dict = {}
         self.env_dict["tapo_username"] = os.getenv("tapo_username")
         self.env_dict["tapo_password"] = os.getenv("tapo_password")
-        self.env_dict["tapo_plug_ip"] = os.getenv("tapo_plug_ip")
         self.env_dict["result_gmail"] = os.getenv("result_gmail")
         self.env_dict["result_gmail_app_password"] = os.getenv("result_gmail_app_password")
         self.env_dict["result_recipient_email"] = os.getenv("result_recipient_email")
@@ -36,10 +34,6 @@ class Envs:
     @property
     def tapo_password(self):
         return self.env_dict["tapo_password"]
-    
-    @property
-    def tapo_plug_ip(self):
-        return self.env_dict["tapo_plug_ip"]
     
     @property
     def result_gmail(self):
