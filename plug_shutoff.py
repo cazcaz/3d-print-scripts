@@ -10,24 +10,15 @@ import asyncio
 from setup_envs import Envs, get_envs
 
 from plugp100.common.credentials import AuthCredential
-from plugp100.discovery.tapo_discovery import DiscoveredDevice, TapoDiscovery
-from plugp100.new.device_factory import (
-    DeviceConnectConfiguration,
-    TapoPlug,
-    connect,
+from plugp100.discovery import (
+    DiscoveredDevice,
+    TapoDiscovery,
+    connect_discovered_device,
 )
-from plugp100.new.components.countdown import Countdown as PlugCountdown
-from plugp100.new.errors.invalid_authentication import InvalidAuthentication as ia
+from plugp100.devices.plug import TapoPlug
+from plugp100.components.countdown import Countdown as PlugCountdown
 
 PLUG_SHUTOFF_COUNTDOWN = 10
-
-# Patch the broken __init__ of InvalidAuthentication to allow it to be raised without arguments
-def fixed_init(self, host: str, device_type: str):
-    super(ia, self).__init__(
-        f"Invalid authentication error for {host}, {device_type}"
-    )
-
-ia.__init__ = fixed_init
 
 async def discover_plugs() -> list[DiscoveredDevice]:
     discovered_devices = await TapoDiscovery.scan()
@@ -57,20 +48,7 @@ async def connect_to_plug(credentials: AuthCredential) -> TapoPlug:
 async def connect_discovered_plug(
     discovered: DiscoveredDevice, credentials: AuthCredential
 ) -> TapoPlug:
-    try:
-        device = await discovered.get_tapo_device(credentials)
-    except Exception as error:
-        if str(error) != "Failed to determine the right tapo protocol":
-            raise
-        schema = discovered.mgt_encrypt_schm
-        port = schema.http_port if schema and schema.http_port else 80
-        configuration = DeviceConnectConfiguration(
-            host=discovered.ip,
-            port=port,
-            credentials=credentials,
-            device_type=discovered.device_type,
-        )
-        device = await connect(configuration)
+    device = await connect_discovered_device(discovered, credentials)
     if not isinstance(device, TapoPlug):
         raise RuntimeError(f"Discovered device at {discovered.ip} is not a Tapo plug.")
     return device

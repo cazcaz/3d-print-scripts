@@ -15,7 +15,7 @@ from plug_shutoff import (
     send_shutoff_countdown,
 )
 from plugp100.common.credentials import AuthCredential
-from plugp100.new.errors.invalid_authentication import InvalidAuthentication
+from plugp100.errors.invalid_authentication import InvalidAuthentication
 
 
 async def identify_plug():
