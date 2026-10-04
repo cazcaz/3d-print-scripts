@@ -19,6 +19,10 @@ from plugp100.devices.plug import TapoPlug
 from plugp100.components.countdown import Countdown as PlugCountdown
 
 PLUG_SHUTOFF_COUNTDOWN = 10
+PRINTER_PLUG_MAC = "8C-86-DD-2B-8B-F8"
+
+def normalize_mac(mac: str) -> str:
+    return mac.replace(":", "").replace("-", "").strip().upper()
 
 async def discover_plugs() -> list[DiscoveredDevice]:
     discovered_devices = await TapoDiscovery.scan()
@@ -32,10 +36,16 @@ async def discover_plug() -> DiscoveredDevice:
     plugs = await discover_plugs()
     if not plugs:
         raise RuntimeError("No Tapo smart plugs found on the local network.")
-    if len(plugs) > 1:
-        found = ", ".join(f"{device.device_model} ({device.ip})" for device in plugs)
-        raise RuntimeError(f"Found multiple Tapo smart plugs; refusing to choose: {found}")
-    return plugs[0]
+    target_mac = normalize_mac(PRINTER_PLUG_MAC)
+    matches = [device for device in plugs if normalize_mac(device.mac or "") == target_mac]
+    if not matches:
+        found = ", ".join(device.mac or "unknown MAC" for device in plugs)
+        raise RuntimeError(
+            f"Printer plug {PRINTER_PLUG_MAC} was not found. Discovered plug MACs: {found}"
+        )
+    if len(matches) > 1:
+        raise RuntimeError(f"Multiple discovered plugs reported printer MAC {PRINTER_PLUG_MAC}.")
+    return matches[0]
 
 async def connect_to_plug(credentials: AuthCredential) -> TapoPlug:
     discovered = await discover_plug()
